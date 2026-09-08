@@ -1,19 +1,25 @@
 version: 0.2
 
 phases:
-  install:
-    runtime-versions:
-      nodejs: 18
-
-  pre_build:
-    commands:
-      - echo "Installing React dependencies..."
-      - npm install
-      - echo "Logging in to Amazon ECR..."
-      - aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin 425750453685.dkr.ecr.ap-southeast-1.amazonaws.com
-      - REPOSITORY_URI=425750453685.dkr.ecr.ap-southeast-1.amazonaws.com/tenderboard-genai-stg-frontend
-      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
-      - IMAGE_TAG=${COMMIT_HASH:-latest}
+    install:
+        runtime-versions:
+            nodejs: 22.12.0
+    pre_build:
+        commands:
+            - echo Installing source NPM dependencies...
+            - npm install -g typescript
+            - npm install --legacy-peer-deps
+            - npm install -g @angular/cli
+            - npm install n
+            - echo "Installing React dependencies..."
+            - npm install -g npm@11.6.2  # Explicitly install npm 11.6.2 (compatible with Node.js v22.12.0)
+            - npm ci
+            - npm install
+            - echo "Logging in to Amazon ECR..."
+            - aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin 425750453685.dkr.ecr.ap-southeast-1.amazonaws.com
+            - REPOSITORY_URI=425750453685.dkr.ecr.ap-southeast-1.amazonaws.com/tenderboard-genai-stg-frontend
+            - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+            - IMAGE_TAG=${COMMIT_HASH:-latest}
 
   build:
     commands:
